@@ -20,6 +20,10 @@ python3 -m http.server 8000     # then open http://localhost:8000
 ES modules need a real HTTP origin, so opening `index.html` from the filesystem will not work. Any
 static file server is fine, and the repo deploys to GitHub Pages unchanged.
 
+> **First deploy needs one manual step.** Turn Pages on once under
+> *Settings → Pages → Source: **GitHub Actions***. The workflow cannot do this itself — its token
+> may deploy to Pages but not create the site. After that, every merge to `main` publishes.
+
 To run the tests (no browser, no dependencies). Most of them check the biology rather than the
 code — that a trail forms and then fades, that bees switch from waggling to trembling when the hive
 cannot keep up, that termites build nothing at all when every building cue is switched off:
