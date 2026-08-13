@@ -9,8 +9,10 @@ actually uses. The contrast between those mechanisms is the point of the project
 There is no build step and there are no dependencies. Serve the repo root and open it:
 
 ```sh
-python3 -m http.server 8000     # then open http://localhost:8000
-node --test test/               # pure-maths unit tests
+python3 -m http.server 8000        # then open http://localhost:8000
+node --test test/*.test.js         # unit and behavioural tests
+node tools/build-science.js        # regenerate SCIENCE.md from the PARAMS tables
+node tools/build-science.js --check   # fail if SCIENCE.md has drifted (CI runs this)
 ```
 
 ES modules need a real HTTP origin, so `file://` will not work. Anything that serves static files

@@ -1257,7 +1257,7 @@ export function create(world, rng) {
 
   return {
     meta, PARAMS, NOTES,
-    step, renderField, renderNest, stats, describe, controls, applyTool,
+    step, renderField, renderNest, stats, describe, controls, applyTool, goal,
     toolIsDragging: () => false,
     _internals: {
       wasps, brood, clock, stores, goal, sites, runtime, params, entrance,

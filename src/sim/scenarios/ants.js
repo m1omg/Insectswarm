@@ -1633,7 +1633,7 @@ export function create(world, rng) {
 
   return {
     meta, PARAMS, NOTES,
-    step, renderField, renderNest, stats, describe, controls, applyTool, toolIsDragging,
+    step, renderField, renderNest, stats, describe, controls, applyTool, goal, toolIsDragging,
     // Exposed for tests and for the headless verification harness.
     _internals: {
       ants, brood, trail, soil, soilTemp, clock, stores, goal, patches, runtime, params, entrance,

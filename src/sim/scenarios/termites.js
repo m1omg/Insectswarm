@@ -1261,7 +1261,7 @@ export function create(world, rng) {
 
   return {
     meta, PARAMS, NOTES,
-    step, renderField, renderNest, stats, describe, controls, applyTool,
+    step, renderField, renderNest, stats, describe, controls, applyTool, goal,
     toolIsDragging: () => view.tool === 'wet',
     _internals: {
       termites, brood, mound, cue, humidity, clock, stores, goal, runtime, params,

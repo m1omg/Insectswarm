@@ -161,6 +161,39 @@ async function buildScenario(id, { keepCamera = false } = {}) {
 
 let statsReadout = null;
 let inspectorBox = null;
+let goalBox = null;
+
+/**
+ * The season's objective, and how it ended. Every colony here is playing the same game — turn a
+ * summer's foraging into something that survives the winter — so it gets the same panel.
+ */
+function refreshGoal() {
+  const goal = app.scenario?.goal;
+  if (!goalBox || !goal) return;
+
+  const pct = Math.round(goal.progress * 100);
+  const done = goal.outcome !== null;
+  const colour = goal.outcome === 'success' ? 'var(--moss)'
+    : goal.outcome === 'failure' ? 'var(--danger)' : 'var(--amber)';
+
+  goalBox.replaceChildren(
+    el('div', { style: { fontSize: '12px', color: 'var(--ink-dim)' }, text: `Goal: ${goal.label}` }),
+    el('div', {
+      style: { fontWeight: '650', fontSize: '15px', margin: '3px 0 6px', color: colour },
+      text: `${Math.round(goal.value)} of ${goal.target}`,
+    }),
+    // A plain progress bar; no need for anything cleverer.
+    el('div', {
+      style: {
+        height: '6px', borderRadius: '3px', background: 'var(--soil-600)', overflow: 'hidden',
+      },
+    }, el('div', { style: { height: '100%', width: `${pct}%`, background: colour } })),
+    el('div', {
+      style: { fontSize: '11px', color: 'var(--ink-faint)', marginTop: '6px' },
+      text: done ? goal.reason : `Judged ${goal.deadline}.`,
+    }),
+  );
+}
 
 function buildPanel() {
   const s = app.scenario;
@@ -175,6 +208,14 @@ function buildPanel() {
       ),
     ),
   );
+
+  if (s.goal) {
+    goalBox = el('div.card');
+    panelContent.append(section('This season', goalBox));
+    refreshGoal();
+  } else {
+    goalBox = null;
+  }
 
   statsReadout = readout(() => (app.scenario?.stats?.() ?? []));
   panelContent.append(section('Colony', el('div.card', null, statsReadout)));
@@ -295,7 +336,10 @@ function draw(alpha) {
 
   hudTimer++;
   if (hudTimer % 15 === 0) updateHud();
-  if (hudTimer % 10 === 0) statsReadout?.refresh();
+  if (hudTimer % 10 === 0) {
+    statsReadout?.refresh();
+    refreshGoal();
+  }
 }
 
 function drawPane(vp, fn) {
