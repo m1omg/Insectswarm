@@ -32,6 +32,13 @@ test/                 node:test unit tests for pure functions
 `engine/` must not know anything about insects. `sim/` must not touch the DOM. Only `main.js` and
 `engine/ui.js` are allowed to read or write the document.
 
+## Workflow
+
+Work goes onto a branch and lands through a **pull request** — never pushed straight to `main`.
+Merging to `main` publishes the site: `.github/workflows/pages.yml` runs the tests and the
+`SCIENCE.md` drift check, then deploys the repository to GitHub Pages as-is. Rolling out is the
+default, not something to be asked about each time.
+
 ## Rules that matter
 
 **Every biological constant carries a citation.** Constants live in a per-scenario `PARAMS` table as
