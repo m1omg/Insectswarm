@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="A scientifically grounded simulation of four social insect colonies: garden ants, honey bees, common wasps and mound-building termites.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314100c'/%3E%3Cellipse cx='16' cy='20' rx='5' ry='7' fill='%23e0a33c'/%3E%3Ccircle cx='16' cy='11' r='4' fill='%238a6039'/%3E%3Cpath d='M13 8 L10 4 M19 8 L22 4' stroke='%238a6039' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<title>Insectswarm — social insect colony simulator</title>
+<style>
+:root {
+  /* Field-guide palette: soil, wax, paper, chitin. */
+  --soil-900: #14100c;
+  --soil-800: #1c1712;
+  --soil-700: #262019;
+  --soil-600: #332b22;
+  --soil-500: #453a2d;
+  --line:     #4a3f31;
+  --ink:      #ece3d4;
+  --ink-dim:  #a89b86;
+  --ink-faint:#6f6455;
+  --amber:    #e0a33c;
+  --amber-dim:#8d6524;
+  --moss:     #7d9c54;
+  --rust:     #c2643a;
+  --sky:      #6f9fc4;
+  --danger:   #c8503f;
+
+  --panel-w: 336px;
+  --topbar-h: 52px;
+  --radius: 9px;
+  --tap: 44px;
+  font-synthesis-weight: none;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--soil-900);
+  color: var(--ink);
+  font: 14px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+
+body { display: flex; flex-direction: column; }
+
+/* Respect the notch / home indicator on phones. */
+#topbar { padding-top: env(safe-area-inset-top); }
+
+/* ---------------------------------------------------------------- top bar */
+
+#topbar {
+  height: calc(var(--topbar-h) + env(safe-area-inset-top));
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-inline: 10px;
+  background: linear-gradient(var(--soil-700), var(--soil-800));
+  border-bottom: 1px solid var(--line);
+  z-index: 20;
+}
+
+#brand {
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  margin-right: 2px;
+}
+#brand span { color: var(--amber); }
+
+#scenario-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+#scenario-tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+  flex: none;
+  min-height: 34px;
+  padding: 6px 11px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tab:hover { color: var(--ink); background: #ffffff0d; }
+.tab[aria-selected="true"] {
+  color: var(--ink);
+  background: var(--soil-600);
+  border-color: var(--line);
+}
+.tab .glyph { font-size: 15px; line-height: 1; }
+
+#transport { display: flex; align-items: center; gap: 6px; flex: none; }
+
+/* ------------------------------------------------------------- stage area */
+
+#body { flex: 1 1 auto; display: flex; min-height: 0; position: relative; }
+
+#stage {
+  flex: 1 1 auto;
+  position: relative;
+  min-width: 0;
+  background: var(--soil-900);
+}
+
+#view { display: block; width: 100%; height: 100%; }
+
+#hud {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #0b0906cc;
+  border: 1px solid var(--line);
+  color: var(--ink-faint);
+  font: 11px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
+  pointer-events: none;
+  white-space: pre;
+  backdrop-filter: blur(3px);
+}
+
+#stage-badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+  pointer-events: none;
+  font-size: 11px;
+  color: var(--ink-faint);
+}
+.badge {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #0b0906b3;
+  border: 1px solid var(--line);
+  backdrop-filter: blur(3px);
+}
+
+/* ----------------------------------------------------------------- panel */
+
+#panel {
+  flex: none;
+  width: var(--panel-w);
+  border-left: 1px solid var(--line);
+  background: var(--soil-800);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 12px calc(16px + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling: touch;
+}
+
+#sheet-handle { display: none; }
+
+.section { margin-bottom: 14px; }
+.section > h2 {
+  margin: 0 0 7px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.card {
+  background: var(--soil-700);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px;
+}
+
+/* ---------------------------------------------------------------- widgets */
+
+button, select {
+  font: inherit;
+  color: var(--ink);
+  background: var(--soil-600);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 7px 10px;
+  min-height: 34px;
+  cursor: pointer;
+}
+button:hover, select:hover { background: var(--soil-500); }
+button:active { transform: translateY(1px); }
+button:focus-visible, select:focus-visible, input:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 1px;
+}
+button.primary { background: var(--amber-dim); border-color: var(--amber); }
+button.icon {
+  min-width: var(--tap);
+  padding: 7px 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+button[aria-pressed="true"] {
+  background: var(--amber-dim);
+  border-color: var(--amber);
+  color: #fff;
+}
+
+.row { display: flex; align-items: center; gap: 8px; }
+.row + .row { margin-top: 8px; }
+.grow { flex: 1 1 auto; min-width: 0; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  background: var(--soil-600);
+  border: 1px solid var(--line);
+  color: var(--ink-dim);
+  min-height: 32px;
+}
+.chip[aria-pressed="true"] { color: #fff; }
+
+label.field { display: block; font-size: 12px; color: var(--ink-dim); }
+label.field + label.field { margin-top: 9px; }
+label.field .value { float: right; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+input[type="range"] {
+  width: 100%;
+  margin: 6px 0 0;
+  height: 22px;
+  accent-color: var(--amber);
+  background: transparent;
+}
+
+dl.readout {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 3px 10px;
+  margin: 0;
+  font-size: 12px;
+}
+dl.readout dt { color: var(--ink-dim); }
+dl.readout dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+
+.note {
+  font-size: 12px;
+  color: var(--ink-dim);
+  line-height: 1.5;
+}
+.note + .note { margin-top: 9px; }
+.note cite {
+  display: block;
+  font-style: normal;
+  font-size: 11px;
+  color: var(--ink-faint);
+  margin-top: 2px;
+}
+.empty { color: var(--ink-faint); font-size: 12px; font-style: italic; }
+
+/* ------------------------------------------------- phone: panel as a sheet */
+
+@media (max-width: 780px) {
+  :root { --topbar-h: 48px; }
+
+  #brand { display: none; }
+
+  #body { flex-direction: column; }
+
+  #panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 62vh;
+    border-left: none;
+    border-top: 1px solid var(--line);
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -10px 30px #0009;
+    transform: translateY(calc(100% - 46px - env(safe-area-inset-bottom)));
+    transition: transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    padding-top: 0;
+    z-index: 15;
+  }
+  #panel.open { transform: translateY(0); }
+
+  #sheet-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: sticky;
+    top: 0;
+    height: 46px;
+    margin: 0 -12px 8px;
+    background: var(--soil-800);
+    border-radius: 14px 14px 0 0;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    width: calc(100% + 24px);
+    color: var(--ink-dim);
+    font-size: 12px;
+  }
+  #sheet-handle::before {
+    content: "";
+    width: 34px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--ink-faint);
+  }
+
+  #hud { bottom: 54px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #panel { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<header id="topbar">
+  <div id="brand">Insect<span>swarm</span></div>
+
+  <div id="scenario-tabs" role="tablist" aria-label="Colony"></div>
+
+  <div id="transport">
+    <button id="btn-play" class="icon" title="Play / pause (space)" aria-label="Play or pause">❙❙</button>
+    <select id="speed" aria-label="Simulation speed">
+      <option value="0.25">¼×</option>
+      <option value="1" selected>1×</option>
+      <option value="3">3×</option>
+      <option value="10">10×</option>
+      <option value="30">30×</option>
+    </select>
+  </div>
+</header>
+
+<div id="body">
+  <div id="stage">
+    <canvas id="view"></canvas>
+    <div id="stage-badges">
+      <span class="badge" id="badge-field">field</span>
+      <span class="badge" id="badge-nest">nest</span>
+    </div>
+    <div id="hud"></div>
+  </div>
+
+  <aside id="panel" aria-label="Controls">
+    <button id="sheet-handle" aria-expanded="false" aria-controls="panel">Controls</button>
+    <div id="panel-content"></div>
+  </aside>
+</div>
+
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
