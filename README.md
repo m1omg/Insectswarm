@@ -1,5 +1,7 @@
 # Insectswarm
 
+**[Run it in your browser →](https://m1omg.github.io/Insectswarm/)**
+
 Four social-insect colonies, simulated in a browser, each coordinated by the mechanism the real
 animal actually uses.
 
