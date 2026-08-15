@@ -35,9 +35,13 @@ test/                 node:test unit tests for pure functions
 ## Workflow
 
 Work goes onto a branch and lands through a **pull request** — never pushed straight to `main`.
-Merging to `main` publishes the site: `.github/workflows/pages.yml` runs the tests and the
-`SCIENCE.md` drift check, then deploys the repository to GitHub Pages as-is. Rolling out is the
-default, not something to be asked about each time.
+Rolling out is the default, not something to be asked about each time.
+
+Merging to `main` publishes the site, but Actions does not do the publishing. GitHub Pages serves
+`main` directly (Source: "Deploy from a branch", `main`, `/ (root)`), because there is no build
+step — the repository is the site. `.github/workflows/tests.yml` only runs the tests and the
+`SCIENCE.md` drift check. Do not add a deploy job: that setting creates a protected `github-pages`
+environment which rejects any deployment that is not GitHub's own builder.
 
 ## Rules that matter
 
