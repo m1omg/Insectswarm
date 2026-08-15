@@ -37,11 +37,20 @@ test/                 node:test unit tests for pure functions
 Work goes onto a branch and lands through a **pull request** — never pushed straight to `main`.
 Rolling out is the default, not something to be asked about each time.
 
-Merging to `main` publishes the site, but Actions does not do the publishing. GitHub Pages serves
-`main` directly (Source: "Deploy from a branch", `main`, `/ (root)`), because there is no build
-step — the repository is the site. `.github/workflows/tests.yml` only runs the tests and the
-`SCIENCE.md` drift check. Do not add a deploy job: that setting creates a protected `github-pages`
-environment which rejects any deployment that is not GitHub's own builder.
+Merging to `main` publishes the site, but Actions does not do the publishing. There is no build
+step — the repository is the site — so GitHub Pages serves `main` directly. That lives in the
+repository settings, not in this repo: *Settings → Pages → Source: "Deploy from a branch"*, branch
+`main`, folder `/ (root)`. Nothing that lands on `main` reaches the web until that is set; the URL
+just answers "Site not found". `.github/workflows/tests.yml` only runs the tests and the
+`SCIENCE.md` drift check.
+
+Do not add a deploy job. One existed and failed on all three pushes to `main`, each time in about a
+second with no runner assigned and no logs to read. The cause was not the branch-based Pages
+setting — that was never applied. With Pages left on the "GitHub Actions" source, the
+`github-pages` environment only accepts deployments from the repository's **default branch**, and
+the default branch was still the original `claude/insect-swarm-sim-t3rqrv` feature branch rather
+than `main`, so every deployment from `main` was refused before it started. Serving `main` from a
+branch avoids that machinery altogether, which is why it is the chosen route.
 
 ## Rules that matter
 

@@ -27,10 +27,12 @@ jobs:
 #
 # There is no build step — the repository is the site — so GitHub Pages serves `main` directly
 # under Settings → Pages → Source: "Deploy from a branch", branch `main`, folder `/ (root)`.
-# GitHub's own builder publishes every push.
+# GitHub's own builder then publishes every push. That is a repository setting; until someone
+# applies it, the site is not published at all, however green this workflow is.
 #
-# There used to be a deploy job here using actions/deploy-pages. It cannot work alongside that
-# setting: choosing "Deploy from a branch" creates a protected `github-pages` environment that
-# only GitHub's builder may deploy to, so the job was rejected before it was even assigned a
-# runner — two seconds, no steps, no logs. Adding a deploy job back would mean switching Pages to
-# "GitHub Actions", which for a repository that needs no building buys nothing.
+# There used to be a deploy job here using actions/deploy-pages, and it failed on every push to
+# `main` — about a second each, no runner, no steps, no logs. The reason was the `github-pages`
+# environment, which only accepts deployments from the repository's default branch; that default
+# branch was never moved off the original feature branch, so deployments from `main` were refused
+# before they began. Deploying from Actions would mean fixing the default branch and switching the
+# Pages source, which for a repository that needs no building buys nothing over serving the branch.
