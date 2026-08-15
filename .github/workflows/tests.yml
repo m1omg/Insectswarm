@@ -1,0 +1,36 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # No install step: the project has no dependencies, by design.
+      - name: Check SCIENCE.md is in step with the simulation
+        run: node tools/build-science.js --check
+      - name: Unit and behavioural tests
+        run: node --test test/*.test.js
+
+# Publishing is not done from here.
+#
+# There is no build step — the repository is the site — so GitHub Pages serves `main` directly
+# under Settings → Pages → Source: "Deploy from a branch", branch `main`, folder `/ (root)`.
+# GitHub's own builder publishes every push.
+#
+# There used to be a deploy job here using actions/deploy-pages. It cannot work alongside that
+# setting: choosing "Deploy from a branch" creates a protected `github-pages` environment that
+# only GitHub's builder may deploy to, so the job was rejected before it was even assigned a
+# runner — two seconds, no steps, no logs. Adding a deploy job back would mean switching Pages to
+# "GitHub Actions", which for a repository that needs no building buys nothing.
